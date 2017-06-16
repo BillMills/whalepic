@@ -1,0 +1,11 @@
+body {
+	padding-left: 1em;
+}
+
+a img {
+	max-width: 20%;
+}
+
+.hidden{
+	display: none;
+}

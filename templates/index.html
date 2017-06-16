@@ -1,0 +1,93 @@
+<html>
+	<head>
+		<!--Bootstrap-->
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+		<link rel="stylesheet" type="text/css" href="static/css/custom.css"/>
+	</head>
+
+	<body>
+		<div class='row'>
+			<div class='col-md-12'>
+				<h1>Image Browser</h1>
+			</div>
+		</div>
+		<div class='row'>
+			<div class='col-md-2'>
+				<h2>Tags</h2>
+				{% for tag in tags%}
+					<div>
+						<input id="{{tag}}" type="checkbox" name="tag-toggles" onchange="update_display()">
+						<label for="{{tag}}">{{tag}}</label>
+					</div>
+				{% endfor %}
+			</div>
+			<div id='images' class='col-md-10'></div>
+		</div>
+
+		<script>
+
+			loaded_tags = []
+			unloaded_images = JSON.parse(htmlDecode('{{images}}').replace(/\'/g , "\""));
+
+			function update_display(){
+				// decide which tags should be visible
+				var activeChecks = document.querySelectorAll('input[name=tag-toggles]:checked');
+				var activeTags = []
+				for(var i=0; i<activeChecks.length; i++){
+					activeTags[i] = activeChecks[i].id
+
+					//load images with this tag if never done before
+					if(loaded_tags.indexOf(activeTags[i]) == -1){
+						var finished = []
+						for(j=0;j<unloaded_images.length; j++){
+							if(unloaded_images[j].class.indexOf(activeTags[i]) != -1){
+								finished[finished.length] = j
+								var newLink = document.createElement('a')
+								newLink.setAttribute('href', unloaded_images[j].dir + '/' + unloaded_images[j].name)
+								var newImg = document.createElement('img')
+								newImg.setAttribute('class', 'hidden ' + unloaded_images[j].class)
+								newImg.setAttribute('src', 'static/image-repo/' + unloaded_images[j].dir + '/' + unloaded_images[j].name)
+								newImg.setAttribute('style', unloaded_images[j].style)
+								newLink.appendChild(newImg)
+								document.getElementById('images').appendChild(newLink)
+							}
+						}
+						// drop finished images from unloaded list
+						for(j=finished.length-1; j>=0; j--){
+							unloaded_images.splice(finished[j],1)
+						}
+
+						loaded_tags[loaded_tags.length] = activeTags[i];
+					}
+				}
+
+
+
+				// update visibilities of all images
+				var images = document.querySelectorAll('img')
+				for(var i=0; i<images.length; i++){
+					images[i].classList.add('hidden')
+					var tags = images[i].className.split(' ')
+					present:
+					for(var j=0; j<tags.length; j++){
+						for(var k=0; k<activeTags.length; k++){
+							if(tags[j] == activeTags[k]){
+								images[i].classList.remove('hidden')
+								break present
+							}
+						}
+					}
+				}
+			}
+
+			function htmlDecode(input){
+				var doc = new DOMParser().parseFromString(input, "text/html");
+  				return doc.documentElement.textContent;
+			}
+
+			update_display()
+		</script>
+  	</body>
+</html>
